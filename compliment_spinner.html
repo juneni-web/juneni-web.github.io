@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compliment Spinner Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f0f8ff;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    canvas {
+      margin: 20px auto;
+      display: block;
+    }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 6px;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    .output {
+      font-size: 20px;
+      margin-top: 15px;
+      color: #0077cc;
+    }
+    .tooltip {
+      font-size: 14px;
+      color: #666;
+    }
+    .compliment-box {
+      margin-top: 30px;
+      padding: 10px;
+      border: 1px dashed #aaa;
+      background-color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <h1>Compliment Practice Spinner</h1>
+
+  <h2>🎯 Compliment Topic</h2>
+  <canvas id="categoryWheel" width="300" height="300"></canvas>
+  <button onclick="spinWheel('category')">Spin Category</button>
+  <div class="output" id="categoryOutput">---</div>
+  <div class="tooltip" id="categoryTooltip"></div>
+
+  <h2>💬 Response Type</h2>
+  <canvas id="responseWheel" width="300" height="300"></canvas>
+  <button onclick="spinWheel('response')">Spin Response</button>
+  <div class="output" id="responseOutput">---</div>
+  <div class="tooltip" id="responseTooltip"></div>
+
+  <div class="compliment-box">
+    <h3>📢 Example Compliment:</h3>
+    <button onclick="generateCompliment()">Generate Example</button>
+    <div class="output" id="complimentExample">---</div>
+  </div>
+
+  <script>
+    const categories = [
+      { text: "Appearance", cn: "外貌" },
+      { text: "Personality", cn: "个性" },
+      { text: "Effort", cn: "努力" },
+      { text: "Skills", cn: "技能" },
+      { text: "Achievements", cn: "成就" },
+      { text: "Style / Taste", cn: "品味/风格" },
+      { text: "Creativity", cn: "创造力" },
+      { text: "Humor", cn: "幽默感" }
+    ];
+
+    const responses = [
+      { text: "Thanks! / Thank you so much!", cn: "谢谢！" },
+      { text: "I worked hard on that—glad you noticed.", cn: "我为此付出了努力，谢谢你注意到了。" },
+      { text: "That means a lot coming from you.", cn: "你这么说我很感动。" },
+      { text: "You're kind to say that.", cn: "你真好，这么说太客气了。" },
+      { text: "Wow, that made my day!", cn: "哇，听你这么说我心情真好！" },
+      { text: "Thanks, I appreciate it.", cn: "谢谢，我很感激。" },
+      { text: "(Smile and nod!)", cn: "（微笑并点头）" }
+    ];
+
+    const complimentExamples = {
+      "Appearance": "I really like your hairstyle today!",
+      "Personality": "You’re always so positive and supportive.",
+      "Effort": "I can see how much effort you put into this project.",
+      "Skills": "You're really good at explaining things clearly.",
+      "Achievements": "That was a great presentation—you nailed it!",
+      "Style / Taste": "You’ve got great taste in clothes.",
+      "Creativity": "Your design is so original and creative!",
+      "Humor": "You always make the whole class laugh."
+    };
+
+    function drawWheel(canvasId, items, angleOffset = 0) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      const radius = canvas.width / 2;
+      const angle = (2 * Math.PI) / items.length;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      items.forEach((item, i) => {
+        const start = i * angle + angleOffset;
+        const end = start + angle;
+        ctx.beginPath();
+        ctx.moveTo(radius, radius);
+        ctx.arc(radius, radius, radius, start, end);
+        ctx.fillStyle = i % 2 === 0 ? '#ffe680' : '#ffd24d';
+        ctx.fill();
+        ctx.stroke();
+        ctx.save();
+        ctx.translate(radius, radius);
+        ctx.rotate(start + angle / 2);
+        ctx.fillStyle = '#000';
+        ctx.textAlign = 'right';
+        ctx.font = '14px Arial';
+        ctx.fillText(item.text, radius - 10, 5);
+        ctx.restore();
+      });
+    }
+
+    function spinWheel(type) {
+      const items = type === 'category' ? categories : responses;
+      const canvasId = type === 'category' ? 'categoryWheel' : 'responseWheel';
+      const outputId = type === 'category' ? 'categoryOutput' : 'responseOutput';
+      const tooltipId = type === 'category' ? 'categoryTooltip' : 'responseTooltip';
+
+      let angleOffset = 0;
+      const spins = 20; // how many segments to spin through
+      const selectedIndex = Math.floor(Math.random() * items.length);
+      const anglePerItem = (2 * Math.PI) / items.length;
+      angleOffset = selectedIndex * anglePerItem + spins * anglePerItem;
+
+      let currentStep = 0;
+      const totalSteps = 30;
+      const stepAngle = angleOffset / totalSteps;
+
+      const animate = () => {
+        if (currentStep <= totalSteps) {
+          drawWheel(canvasId, items, stepAngle * currentStep);
+          currentStep++;
+          requestAnimationFrame(animate);
+        } else {
+          const selected = items[selectedIndex];
+          document.getElementById(outputId).textContent = selected.text;
+          document.getElementById(tooltipId).textContent = `中文：${selected.cn}`;
+        }
+      };
+
+      animate();
+    }
+
+    function generateCompliment() {
+      const cat = document.getElementById("categoryOutput").textContent;
+      if (complimentExamples[cat]) {
+        document.getElementById("complimentExample").textContent = complimentExamples[cat];
+      } else {
+        document.getElementById("complimentExample").textContent = "Please spin a category first.";
+      }
+    }
+
+    drawWheel('categoryWheel', categories);
+    drawWheel('responseWheel', responses);
+  </script>
+</body>
+</html>
